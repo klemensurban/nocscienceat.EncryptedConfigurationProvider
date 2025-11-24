@@ -65,7 +65,7 @@ ConfigurationManager configuration = builder.Configuration;
    - Add the following section to your `appsettings.json`:
 ```
   "nocscienceat.EncryptedConfigurationProvider": {
-    "BaseDirectory": "path where to find <certificateThumbprint>.encVault",
+    "BaseDirectory": "Directory where to find <certificateThumbprint>.encVault",
     "CertificateThumbprint": "<certificateThumbprint>",
     "LocalMachine": true/false
   }
