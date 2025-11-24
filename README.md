@@ -23,9 +23,30 @@ Add the package to your project: `nocscienceat.EncryptedConfigurationProvider`
 ## Usage
 
 1. **Create an encrypted configuration file**  
-   Use the `nocscienceat.Aes256GcmRsaCryptoService` library to encrypt your JSON configuration - see library description for usage details.  
-   The encrypted file must be named `<certificateThumbprint>.encVault` and placed in a base directory defined in e.g. apssettings.json. or other Methods of configuration. The ServiceAccount running the application must have access to the certificate and it's private key in the specified certificate store.
+   Use the `nocscienceat.Aes256GcmRsaCryptoService` nuget package to encrypt your JSON configuration - see library description for usage details - and encode it with base64.  
+   The encrypted file must be named `<certificateThumbprint>.encVault` and placed in a base directory defined in e.g. apssettings.json. or other methods of configuration. The ServiceAccount running the application must have access to the certificate and it's private key in the specified certificate store.
+```
+using nocscienceat.Aes256GcmRsaCryptoService;
+....
+....
 
+byte[] plainText = Encoding.UTF8.GetBytes(jsonString);
+ReadOnlySpan<byte> plainTextSpan = plainText.AsSpan();
+
+if (string.IsNullOrWhiteSpace(certificateThumbprint) ||
+    certificateThumbprint.Length is not (40 or 64) ||
+    !certificateThumbprint.All(Uri.IsHexDigit))
+{
+    throw new ArgumentException("Certificate thumbprint must be a 40 or 64 character hexadecimal string.");
+}
+byte[] cipherText = CryptoService.Encrypt(plainTextSpan, certificateThumbprint, true); // true .. LocalMachine Certificate Store
+
+string base64CipherText = Convert.ToBase64String(cipherText, Base64FormattingOptions.InsertLineBreaks);
+
+// Output the Base64-encoded ciphertext to a file with name <CertificateThumbprint>.encVault in the current directory
+string outputFileName = $"{certificateThumbprint}.encVault";
+File.WriteAllText(outputFileName, base64CipherText);
+```
 2. **Configure your host to use the provider**  
 
    - Add the NuGet package `nocscienceat.EncryptedConfigurationProvider` to your project
@@ -33,8 +54,14 @@ Add the package to your project: `nocscienceat.EncryptedConfigurationProvider`
    - Add in the using Block of program.cs:
    `using nocscienceat.EncryptedConfigurationProvider;`
 
-   - Add the provider in your application's configuration setup ..  `IConfigurationBuilder.AddEncryptedConfigurationProvider(optional: false);`
+   - Add the provider in your application's configuration setup ..  `IConfigurationBuilder.AddEncryptedConfigurationProvider(optional: false);` e.g. in  a .NET 6+ WebApplication:
+```
+WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
+builder.Configuration.AddEncryptedConfigurationProvider(optional: false);
+
+ConfigurationManager configuration = builder.Configuration;   
+```
    - Add the following section to your `appsettings.json`:
 ```
   "nocscienceat.EncryptedConfigurationProvider": {
