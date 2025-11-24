@@ -6,6 +6,7 @@ A .NET configuration provider that loads encrypted configuration data from files
 
 This library extends `Microsoft.Extensions.Configuration` to support encrypted configuration files (`.encVault`). 
 Configuration values are encrypted using AES-256-GCM and the encryption key is protected using RSA with an X.509 certificate from the Windows Certificate Store (LocalMachine or CurrentUser.)
+For this purpose, it utilizes the `nocscienceat.Aes256GcmRsaCryptoService` library for encryption and decryption operations, but with the same Certificate for Encryption and Signing (AES Key, nonce and tag are signed during Encryption and verified during Decryption)
 
 ## Features
 
@@ -23,8 +24,8 @@ Add the package to your project: `nocscienceat.EncryptedConfigurationProvider`
 ## Usage
 
 1. **Create an encrypted configuration file**  
-   Use the `nocscienceat.Aes256GcmRsaCryptoService` nuget package to encrypt your JSON configuration - see library description for usage details - and encode it with base64.  
-   The encrypted file must be named `<certificateThumbprint>.encVault` and placed in a base directory defined in e.g. apssettings.json. or other methods of configuration. The ServiceAccount running the application must have access to the certificate and it's private key in the specified certificate store.
+   Use the `nocscienceat.Aes256GcmRsaCryptoService` NuGet package to encrypt your JSON configuration - see library description for usage details - and encode it with base64.  
+   The encrypted file must be named `<certificateThumbprint>.encVault` and placed in a base directory defined in e.g. appsettings.json or other methods of configuration. The ServiceAccount running the application must have access to the certificate and its private key in the specified certificate store.
 ```
 using nocscienceat.Aes256GcmRsaCryptoService;
 ....
@@ -39,7 +40,7 @@ if (string.IsNullOrWhiteSpace(certificateThumbprint) ||
 {
     throw new ArgumentException("Certificate thumbprint must be a 40 or 64 character hexadecimal string.");
 }
-byte[] cipherText = CryptoService.Encrypt(plainTextSpan, certificateThumbprint, true); // true .. LocalMachine Certificate Store
+byte[] cipherText = CryptoService.Encrypt(plainTextSpan, certificateThumbprint, certificateThumbprint, true); // true .. LocalMachine Certificate Store
 
 string base64CipherText = Convert.ToBase64String(cipherText, Base64FormattingOptions.InsertLineBreaks);
 
@@ -51,7 +52,7 @@ File.WriteAllText(outputFileName, base64CipherText);
 
    - Add the NuGet package `nocscienceat.EncryptedConfigurationProvider` to your project
 
-   - Add in the using Block of program.cs:
+   - Add in the using block of program.cs:
    `using nocscienceat.EncryptedConfigurationProvider;`
 
    - Add the provider in your application's configuration setup ..  `IConfigurationBuilder.AddEncryptedConfigurationProvider(optional: false);` e.g. in  a .NET 6+ WebApplication:
@@ -91,10 +92,8 @@ ConfigurationManager configuration = builder.Configuration;
         }
     }
 ```
-
-
 ## Notes
 
-- The certificate must be available in the specified certificate store. The ServiceAccount running the application must have access to the certificate and it's private key in the specified certificate store.
+- The certificate must be available in the specified certificate store. The ServiceAccount running the application must have access to the certificate and its private key in the specified certificate store.
 - The provider will throw if the encrypted file is missing and `optional` is set to `false`.
 

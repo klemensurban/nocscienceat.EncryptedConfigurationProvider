@@ -51,7 +51,7 @@ public class EncryptedConfigurationProvider : JsonConfigurationProvider
         }
 
         // Pass _localMachine and _certificateThumbprint as additional parameters to Decrypt
-        byte[] decryptedConfig = CryptoService.Decrypt(encryptedConfig.AsSpan(), _certificateThumbprint, _localMachine);
+        byte[] decryptedConfig = CryptoService.Decrypt(encryptedConfig.AsSpan(), _certificateThumbprint, _certificateThumbprint, _localMachine);
 
         using MemoryStream stream = new(decryptedConfig);
 
