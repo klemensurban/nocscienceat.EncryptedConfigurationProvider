@@ -24,6 +24,10 @@ Add the package to your project: `nocscienceat.EncryptedConfigurationProvider`
 ## Usage
 
 1. **Create an encrypted configuration file**  
+
+   Update: You can use the https://github.com/klemensurban/nocscienceat.JsonEncryptor Command Line Utility to create encrypted configuration files 
+
+   Code snippet to create an encrypted configuration file:
    Use the `nocscienceat.Aes256GcmRsaCryptoService` NuGet package to encrypt your JSON configuration - see library description for usage details - and encode it with base64.  
    The encrypted file must be named `<certificateThumbprint>.encVault` and placed in a base directory defined in e.g. appsettings.json or other methods of configuration. The ServiceAccount running the application must have access to the certificate and its private key in the specified certificate store.
 ```
